@@ -1,27 +1,25 @@
 FROM php:8.2-fpm
 
-# Instalar dependencias
+# Instalar dependencias del sistema y extensiones de PHP
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql
 
 # Instalar Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Establecer directorio de trabajo
+# Establecer el directorio de trabajo
 WORKDIR /var/www/html
 
 # Copiar archivos del proyecto
 COPY . .
 
-# Instalar dependencias PHP
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+# Instalar dependencias de Composer
+RUN composer install --no-interaction --optimize-autoloader
 
-# Establecer permisos
+# Configurar permisos
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Exponer puerto
-EXPOSE 8000
-
-# Iniciar PHP-FPM
+EXPOSE 9000
 CMD ["php-fpm"]
