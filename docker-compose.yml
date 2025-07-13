@@ -1,0 +1,58 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: school-admin-app
+    container_name: school-admin-app
+    ports:
+      - "8001:8000" # Cambiado de 8000:8000 a 8001:8000
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - postgres
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=school_admin
+      - DB_USERNAME=admin
+      - DB_PASSWORD=secret
+
+  postgres:
+    image: postgres:16
+    container_name: school-admin-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=school_admin
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  nginx:
+    image: nginx:latest
+    container_name: school-admin-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
+      - .:/var/www/html
+    depends_on:
+      - app
+
+  node:
+    image: node:20
+    container_name: school-admin-node
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    command: npm run dev
+
+volumes:
+  postgres_data:
